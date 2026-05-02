@@ -1,10 +1,10 @@
-#  Homelab & Cybersecurity Lab — Build Report
+# Homelab & Cybersecurity Lab — Build Report
 
 > A documentation of my homelab journey — from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Environment](#environment)
 - [Homelab Stack](#homelab-stack)
@@ -21,6 +21,8 @@
   - [Reconnaissance](#reconnaissance)
   - [Exploits](#exploits)
   - [Password Cracking](#password-cracking)
+  - [Live Attack Monitoring](#live-attack-monitoring)
+  - [Fail2ban — Automated Defense](#fail2ban--automated-defense)
 - [Key Lessons Learned](#key-lessons-learned)
 - [Architecture Overview](#architecture-overview)
 - [Next Steps](#next-steps)
@@ -392,71 +394,7 @@ john --show hashes.txt
 
 ---
 
-## Key Lessons Learned
-
-**Networking:**
-- Docker bridge vs host vs NAT vs bridged networking and when to use each
-- Why `localhost` inside containers refers to the container, not the host
-- How DNS resolution breaks inside containers and how to fix it
-- How Tailscale creates encrypted peer-to-peer tunnels without port forwarding
-
-**Monitoring:**
-- How metrics pipelines work: collector → storage → visualisation
-- PromQL basics — `rate()`, labels, filtering
-- LogQL basics — label filtering, string matching
-- The difference between metrics (what's happening) and logs (what happened)
-
-**Cybersecurity:**
-- How Metasploit modules, payloads and sessions work
-- Difference between a bindshell and a reverse shell
-- What Meterpreter is and why it's preferred over a plain shell
-- How password hashing works and why weak passwords are easily cracked
-- Real CVEs and how supply chain attacks work
-- Why wordlist choice matters in password cracking
-- How to monitor live attacks using Grafana Loki in real time
-- How Fail2ban automatically detects and blocks brute force attacks
-- The full attack and defense cycle from attacker and defender perspectives
-
----
-
-## Architecture Overview
-
-```
-┌──────────────────────────────────────────────────┐
-│                  Homelab Server                  │
-│                                                  │
-│  Node Exporter ──┐                               │
-│  cAdvisor ───────┼──► Prometheus ──► Grafana     │
-│                  │                      ▲         │
-│  Promtail ───────────► Loki ────────────┘         │
-│                                                  │
-│  Pi-hole (DNS filtering)                         │
-│  Tailscale (remote VPN access)                   │
-│  Ollama + Open WebUI (local AI)                  │
-└──────────────────────────────────────────────────┘
-```
-
----
-
-## Next Steps
-
-- [ ] Add Wazuh SIEM for security alerting and threat detection
-- [ ] Set up DVWA for web application penetration testing
-- [ ] Practice privilege escalation techniques
-- [ ] Try CTF challenges on HackTheBox / TryHackMe
-- [ ] Migrate ELK SIEM from VMware to a dedicated machine
-- [ ] Set up a reverse proxy (Nginx/Caddy) with local DNS
-- [x] Monitor live attacks via Grafana + Loki
-- [x] Set up Fail2ban for automated SSH brute force defense
-- [ ] Work toward OSCP certification
-
----
-
-*Built and documented by Danish — a homelab and cybersecurity learning journey.*
-
----
-
-### Live Attack Monitoring with Grafana + Loki
+### Live Attack Monitoring
 
 After setting up the attack lab, Loki and Grafana were used to monitor attacks in real time.
 
@@ -538,3 +476,68 @@ Kali gets connection refused
     ↓
 Grafana/Loki shows the full timeline of events
 ```
+
+---
+
+## Key Lessons Learned
+
+**Networking:**
+- Docker bridge vs host vs NAT vs bridged networking and when to use each
+- Why `localhost` inside containers refers to the container, not the host
+- How DNS resolution breaks inside containers and how to fix it
+- How Tailscale creates encrypted peer-to-peer tunnels without port forwarding
+
+**Monitoring:**
+- How metrics pipelines work: collector → storage → visualisation
+- PromQL basics — `rate()`, labels, filtering
+- LogQL basics — label filtering, string matching
+- The difference between metrics (what's happening) and logs (what happened)
+
+**Cybersecurity:**
+- How Metasploit modules, payloads and sessions work
+- Difference between a bindshell and a reverse shell
+- What Meterpreter is and why it's preferred over a plain shell
+- How password hashing works and why weak passwords are easily cracked
+- Real CVEs and how supply chain attacks work
+- Why wordlist choice matters in password cracking
+- How to monitor live attacks using Grafana + Loki in real time
+- How Fail2ban automatically detects and blocks brute force attacks
+- The full attack and defense cycle from attacker and defender perspectives
+
+---
+
+## Architecture Overview
+
+```
+┌──────────────────────────────────────────────────┐
+│                  Homelab Server                  │
+│                                                  │
+│  Node Exporter ──┐                               │
+│  cAdvisor ───────┼──► Prometheus ──► Grafana     │
+│                  │                      ▲         │
+│  Promtail ───────────► Loki ────────────┘         │
+│                                                  │
+│  Pi-hole (DNS filtering)                         │
+│  Tailscale (remote VPN access)                   │
+│  Ollama + Open WebUI (local AI)                  │
+│  Fail2ban (automated SSH brute force defense)    │
+└──────────────────────────────────────────────────┘
+```
+
+---
+
+## Next Steps
+
+- [x] Monitor live attacks via Grafana + Loki
+- [x] Set up Fail2ban for automated SSH brute force defense
+- [ ] Add Wazuh SIEM for security alerting and threat detection
+- [ ] Set up DVWA for web application penetration testing
+- [ ] Practice privilege escalation techniques
+- [ ] Try CTF challenges on HackTheBox / TryHackMe
+- [ ] Migrate ELK SIEM from VMware to a dedicated machine
+- [ ] Set up a reverse proxy (Nginx/Caddy) with local DNS
+- [ ] Work toward OSCP certification
+
+---
+
+*Built and documented by Danish — a homelab and cybersecurity learning journey.*
