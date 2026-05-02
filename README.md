@@ -1,6 +1,6 @@
-# Homelab & Cybersecurity Lab - Build Report
+#  Homelab & Cybersecurity Lab — Build Report
 
-> A documentation of my homelab journey - from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
+> A documentation of my homelab journey — from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
 
 ---
 
@@ -413,6 +413,9 @@ john --show hashes.txt
 - How password hashing works and why weak passwords are easily cracked
 - Real CVEs and how supply chain attacks work
 - Why wordlist choice matters in password cracking
+- How to monitor live attacks using Grafana Loki in real time
+- How Fail2ban automatically detects and blocks brute force attacks
+- The full attack and defense cycle from attacker and defender perspectives
 
 ---
 
@@ -443,8 +446,95 @@ john --show hashes.txt
 - [ ] Try CTF challenges on HackTheBox / TryHackMe
 - [ ] Migrate ELK SIEM from VMware to a dedicated machine
 - [ ] Set up a reverse proxy (Nginx/Caddy) with local DNS
+- [x] Monitor live attacks via Grafana + Loki
+- [x] Set up Fail2ban for automated SSH brute force defense
 - [ ] Work toward OSCP certification
 
 ---
 
 *Built and documented by Danish — a homelab and cybersecurity learning journey.*
+
+---
+
+### Live Attack Monitoring with Grafana + Loki
+
+After setting up the attack lab, Loki and Grafana were used to monitor attacks in real time.
+
+**Query used in Grafana Explore (Live mode):**
+```
+{filename="/var/log/auth.log"} |= "Failed password"
+```
+
+**Tool used on Kali (attacker):**
+```bash
+hydra -l danish -P /usr/share/wordlists/rockyou.txt -t 4 ssh://<server-ip>
+```
+
+**What was observed:**
+
+While Hydra ran on Kali, Grafana's Live mode showed failed SSH login attempts flooding in real time — each attempt appearing as a log line with the attacker's IP, username tried, and timestamp. This simulated exactly what a SOC analyst would see during an active brute force attack.
+
+```
+sshd: Failed password for danish from <attacker-ip> port 54321 ssh2
+sshd: Failed password for danish from <attacker-ip> port 54322 ssh2
+sshd: Failed password for danish from <attacker-ip> port 54323 ssh2
+```
+
+---
+
+### Fail2ban — Automated Defense
+
+**Purpose:** Automatically ban IPs that exceed a threshold of failed SSH login attempts.
+
+**Installation:**
+```bash
+sudo apt install fail2ban -y
+```
+
+**Configuration** (`/etc/fail2ban/jail.local`):
+```ini
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 5
+findtime = 60
+bantime = 300
+```
+
+**Settings:**
+- 5 failed attempts within 60 seconds → banned for 300 seconds
+- Monitors `/var/log/auth.log` for failed SSH attempts
+- Uses iptables to block the offending IP
+
+**Result:**
+
+After running Hydra from Kali, Fail2ban detected 5 failed attempts within seconds and automatically banned the Kali IP:
+
+```
+fail2ban.actions: NOTICE  [sshd] Ban <attacker-ip>
+```
+
+Hydra immediately lost connectivity to the server — all subsequent attempts were dropped at the firewall level.
+
+**Checking ban status:**
+```bash
+sudo fail2ban-client status sshd
+```
+
+**Unbanning an IP:**
+```bash
+sudo fail2ban-client set sshd unbanip <attacker-ip>
+```
+
+**Full attack and defense cycle demonstrated:**
+```
+Kali runs Hydra (brute force)
+    ↓ 5 failed SSH attempts in 60s
+Fail2ban detects via auth.log
+    ↓ bans IP via iptables
+Kali gets connection refused
+    ↓
+Grafana/Loki shows the full timeline of events
+```
