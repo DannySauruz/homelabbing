@@ -1,10 +1,10 @@
-# 🖥️ Homelab & Cybersecurity Lab — Build Report
+#  Homelab & Cybersecurity Lab — Build Report
 
 > A documentation of my homelab journey — from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
 
 ---
 
-## 📋 Table of Contents
+##  Table of Contents
 
 - [Environment](#environment)
 - [Homelab Stack](#homelab-stack)
@@ -216,6 +216,29 @@ services:
 **Access:** `http://<server-ip>:8080`
 
 **Note:** Running LLMs on CPU generates significant heat on older hardware. Recommended to start Ollama on-demand rather than keeping it running 24/7.
+
+#### Offloading Ollama to a More Powerful Machine
+
+To reduce heat on the server and get faster responses, Ollama was moved to the PC (Ryzen 5600X, RX 9060 XT 16GB) and Open WebUI was updated to point to it over the network.
+
+**On Windows PC — allow network connections:**
+```powershell
+[System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0", "Machine")
+```
+Restart Ollama after setting this.
+
+**Pull model on PC:**
+```powershell
+ollama pull deepseek-r1:7b
+```
+
+**Update Open WebUI on server to point to PC:**
+```yaml
+environment:
+  - OLLAMA_BASE_URL=http://<pc-ip>:11434
+```
+
+**Known issue:** RX 9060 XT is a new card — Ollama ROCm support not yet available, model runs on CPU. GPU support to be explored via LM Studio.
 
 ---
 
@@ -530,6 +553,7 @@ Grafana/Loki shows the full timeline of events
 
 - [x] Monitor live attacks via Grafana + Loki
 - [x] Set up Fail2ban for automated SSH brute force defense
+- [ ] Try LM Studio for AMD GPU support (RX 9060 XT)
 - [ ] Add Wazuh SIEM for security alerting and threat detection
 - [ ] Set up DVWA for web application penetration testing
 - [ ] Practice privilege escalation techniques
